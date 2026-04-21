@@ -10,26 +10,30 @@ The problem: Legami releases new erasable pens every few weeks and they sell out
 
 | Layer | Choice |
 |---|---|
-| Runtime | Python 3.12-slim (Docker) |
-| Scraping | `requests` + `beautifulsoup4` (page is static HTML) |
-| Product ID | SKU extracted from product URL (e.g. `VEP0074`) — stable across renames |
-| State | Single `state.json` file mounted as volume |
+| Runtime | Python 3 (system interpreter on CT 103) |
+| Dependencies | `requests` only (installed via `apt install python3-requests`) |
+| Scraping | `re.findall(r'VEP\d{4}', html)` on raw HTML — page is static |
+| Product ID | SKU from URL (e.g. `VEP0074`), stable across renames |
+| State | `state.txt`, one SKU per line |
 | Notifications | Telegram Bot API (`sendMessage`) |
-| Scheduling | Host cron on CT 103 — Monday & Thursday, 10:00 Paris |
+| Scheduling | Host crontab on CT 103, Monday & Thursday 10:00 Europe/Paris (`CRON_TZ`) |
 
-Single one-shot script: fetch → parse SKUs → diff against state → notify new SKUs → rewrite state. No web server, no DB.
+Single ~40-line script `check.py`: fetch → regex SKUs → diff against state → notify new ones → rewrite state. First run writes state without notifying (implicit seed).
 
 ## DevOps
 
-- Hosted on CT 103 (Docker host) under `/opt/legami-watcher/`.
-- Container launched on schedule via host cron: `docker compose run --rm watcher`.
-- First run uses a `--seed` flag to populate `state.json` without notifying.
-- On scrape failure (HTTP error, empty result), the state file is **not** overwritten and an alert is sent to Telegram.
-- Code pushed from Mac → CT 103 via `rsync`, and to GitHub in parallel.
+- Deployed at `/opt/legami-watcher/` on CT 103 (192.168.2.64).
+- Crontab entry:
+  ```
+  CRON_TZ=Europe/Paris
+  0 10 * * 1,4 cd /opt/legami-watcher && set -a && . ./.env && set +a && /usr/bin/python3 check.py >> /opt/legami-watcher/cron.log 2>&1
+  ```
+- No Docker, no reverse proxy, no exposed port — pure batch job.
+- Code is pushed to GitHub from the Mac; CT 103 holds the runtime copy + `.env` + `state.txt`.
 
 ## Security
 
-- Repo is public; contains no secrets.
-- `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` stored in `.env` on CT 103 only, never committed (`.env.example` provided).
-- Container has no exposed ports (batch job only, no NPM proxy host).
-- Outbound HTTPS only (Legami + Telegram API).
+- Public repo, no secrets committed.
+- `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` live in `/opt/legami-watcher/.env` on CT 103 only (see `.env.example`).
+- `.env` and `state.txt` are gitignored.
+- Outbound HTTPS only (Legami + Telegram API), no inbound traffic.
