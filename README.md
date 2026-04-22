@@ -2,38 +2,58 @@
 
 ## Overview
 
-**Legami Pen Watcher** — detect when a new erasable pen is released on Legami's French site.
+**Legami Pen Watcher** — micro-site public qui prévient par email les fans de stylos effaçables Legami dès qu'une nouvelle référence apparaît sur le site français.
 
-The problem: Legami releases new erasable pens every few weeks and they sell out fast. The "nouveauté" badge on the site stays for weeks, so it's unreliable as a signal. This project checks the [erasable pens page](https://www.legami.com/fr-fr/papeterie/ecriture/stylos-effacables.html) twice a week, compares against a local history of known product SKUs, and sends a Telegram notification when a truly new SKU appears.
+Le problème : Legami sort des nouveaux stylos effaçables toutes les quelques semaines et ils partent vite. Le badge "nouveauté" reste des semaines sur le site → signal inutilisable. Ce projet scrute la [page stylos effaçables](https://www.legami.com/fr-fr/papeterie/ecriture/stylos-effacables.html) chaque matin, compare à un historique local de SKUs connus, et envoie un email aux inscrits dès qu'un nouveau SKU apparaît.
+
+Le site est hébergé sur `pennino.bard3.duckdns.org`.
 
 ## Architecture & Stack
 
-| Layer | Choice |
+| Couche | Choix |
 |---|---|
-| Runtime | Python 3 (system interpreter on CT 103) |
-| Dependencies | `requests` only (installed via `apt install python3-requests`) |
-| Scraping | `re.findall(r'VEP\d{4}', html)` on raw HTML — page is static |
-| Product ID | SKU from URL (e.g. `VEP0074`), stable across renames |
-| State | `state.txt`, one SKU per line |
-| Notifications | Telegram Bot API (`sendMessage`) |
-| Scheduling | Host crontab on CT 103, Monday & Thursday 10:00 Europe/Paris (`CRON_TZ`) |
+| Runtime | Python 3 (container Docker unique) |
+| Web | FastAPI + Jinja2 |
+| Scraping | `re.findall(r'VEP\d{4}', html)` sur le HTML brut — page statique |
+| Identifiant produit | SKU depuis l'URL (ex. `VEP0074`), stable malgré les renommages |
+| Base de données | SQLite (inscrits + SKUs connus) |
+| Scheduler | APScheduler en process, cron interne 10h Europe/Paris |
+| Email | Brevo (API transactionnelle) |
+| Hébergement | Docker sur Proxmox CT, reverse proxy Nginx Proxy Manager |
+| Langue | Français uniquement |
 
-Single ~40-line script `check.py`: fetch → regex SKUs → diff against state → notify new ones → rewrite state. First run writes state without notifying (implicit seed).
+Un seul service Python : page d'inscription + endpoint de désinscription (token unique par inscrit) + job quotidien de scraping qui envoie les mails en batch via Brevo.
+
+## Fonctionnement utilisateur
+
+1. Visite de `pennino.bard3.duckdns.org` → formulaire email.
+2. L'utilisateur saisit son email → inscription immédiate (pas de double opt-in).
+3. Chaque matin ~10h, si un nouveau stylo est détecté, tous les inscrits reçoivent un email avec le nom du produit et un lien vers la page Legami.
+4. Chaque email contient un lien de désinscription (token unique) qui supprime l'adresse de la base.
 
 ## DevOps
 
-- Deployed at `/opt/legami-watcher/` on CT 103 (192.168.2.64).
-- Crontab entry:
-  ```
-  CRON_TZ=Europe/Paris
-  0 10 * * 1,4 cd /opt/legami-watcher && set -a && . ./.env && set +a && /usr/bin/python3 check.py >> /opt/legami-watcher/cron.log 2>&1
-  ```
-- No Docker, no reverse proxy, no exposed port — pure batch job.
-- Code is pushed to GitHub from the Mac; CT 103 holds the runtime copy + `.env` + `state.txt`.
+- Déployé en container Docker sur Proxmox (skill Docker habituelle).
+- Sous-domaine `pennino.bard3.duckdns.org` via Nginx Proxy Manager.
+- Secrets (`BREVO_API_KEY`, clé de signature des tokens) dans `.env` monté dans le container, jamais committés.
+- État persisté dans un volume : base SQLite (inscrits + SKUs connus).
 
-## Security
+## Sécurité & RGPD
 
-- Public repo, no secrets committed.
-- `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` live in `/opt/legami-watcher/.env` on CT 103 only (see `.env.example`).
-- `.env` and `state.txt` are gitignored.
-- Outbound HTTPS only (Legami + Telegram API), no inbound traffic.
+- Repo public, aucun secret committé.
+- HTTPS via NPM + Let's Encrypt.
+- Lien de désinscription fonctionnel dans chaque email (obligation RGPD minimale).
+- Pas de double opt-in, pas de mentions légales formelles, pas d'anti-spam dans la V2 initiale — à ajouter si le service prend de l'ampleur.
+
+## Hors périmètre V2
+
+Reportés à une version ultérieure :
+- Internationalisation (EN/IT) avec sélecteur de langue
+- Pourboire Stripe
+- Page admin / statistiques
+- Double opt-in, CAPTCHA, mentions légales complètes
+- Préférences utilisateur (filtres par couleur, modèle, etc.)
+
+## Historique
+
+La V1 était un script Python minimaliste qui envoyait des notifications Telegram personnelles deux fois par semaine. Pour voir cet état : `git checkout v1-telegram`.

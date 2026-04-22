@@ -1,22 +1,33 @@
-# Pathfinder — 260421-Legami
+# Pathfinder — V2 Legami Pen Watcher
 
-Numbered list of design & build steps. Model recommendation, token estimate, and status per step.
+Étapes de conception & build de la V2 : micro-site public FR + notifications email quotidiennes.
+La V1 (script Telegram) est archivée sous le tag git `v1-telegram`.
 
-**Simplified plan** — single Python script, no Docker, host crontab on CT 103. Regex parsing (no BeautifulSoup), plain-text state file, implicit first-run seeding.
+**Stack simplifiée** : Flask (3 routes) + Resend (API ultra simple) + SQLite stdlib + APScheduler. Un seul container Docker.
 
-| # | Step | Description | Model | Tokens | Status |
-|---|------|-------------|-------|--------|--------|
+| # | Étape | Description | Modèle | Tokens | Statut |
+|---|-------|-------------|--------|--------|--------|
+| 1 | Préparation comptes & domaine | Créer compte Resend + vérifier domaine d'envoi (SPF/DKIM), réserver sous-domaine `pennino.bard3.duckdns.org` dans DuckDNS | Haiku | ~1k | ⏳ |
+| 2 | Squelette repo | Structure `app/`, `templates/`, `Dockerfile`, `docker-compose.yml`, `requirements.txt` (flask, httpx, apscheduler), `.gitignore`, `.env.example` | Haiku | ~2k | ⏳ |
+| 3 | DB + scraping | `sqlite3` stdlib : tables `subscribers` et `known_skus`, init idempotente. `scraper.py` : fetch + regex `VEP\d{4}`, diff, insertion. Premier run = seed silencieux | Sonnet | ~4k | ⏳ |
+| 4 | Mailer + scheduler | `mailer.py` : API Resend (~10 lignes), template HTML FR, lien désinscription avec token. APScheduler : job quotidien 10:00 Europe/Paris → scrape → envoi si nouveaux | Sonnet | ~4k | ⏳ |
+| 5 | Micro-site Flask | `GET /` page + formulaire inscription, `POST /` traitement, `GET /unsubscribe?token=...` suppression. Templates Jinja minimalistes, CSS simple | Sonnet | ~3k | ⏳ |
+| 6 | Packaging Docker | `Dockerfile` Python slim, `docker-compose.yml` avec volume `/data` et port 8000, conf via skill Docker du projet | Sonnet | ~3k | ⏳ |
+| 7 | Déploiement Proxmox | Push code, config NPM (`pennino.bard3.duckdns.org` → :8000 + Let's Encrypt), volume monté, `.env` rempli, démarrage + vérif logs | Sonnet | ~3k | ⏳ |
+| 8 | Bascule V1 → V2 | Vérifier scraping V2 cohérent avec V1, retirer cron Telegram sur CT 103, archiver `/opt/legami-watcher/` | Haiku | ~1k | ⏳ |
+| 9 | Tests end-to-end | Inscription → forcer nouveau SKU → vérifier email reçu → clic désinscription → vérifier suppression. Contrôle anti-spam. Commit + merge `main` | Sonnet | ~2k | ⏳ |
 
-| 1 | Write `check.py` | Single ~40-line script: fetch page with realistic User-Agent, extract SKUs via `re.findall(r'VEP\d{4}', html)`, diff against `state.txt` (one SKU per line), POST new ones to Telegram `sendMessage`. If `state.txt` doesn't exist → write without notifying (implicit seed) | Sonnet | ~5k | ✅ Done |
+**Total estimé :** ~23k tokens (vs 30k avant coupes)
 
-| 2 | Repo scaffolding | `requirements.txt` (just `requests`), `.gitignore` (`.env`, `state.txt`), `.env.example` with `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | Haiku | ~1k | ✅ Done |
+**Runtime cost :** 0 tokens. Une fois déployée, l'app tourne seule en container Docker.
 
-| 3 | Deploy to CT 103 | `rsync` script to `/opt/legami-watcher/`, create `.env` with real secrets, `pip install -r requirements.txt --user`, first manual run to seed `state.txt` | Haiku | ~2k | ✅ Done |
+**Légende statut :** ⏳ À faire · 🚧 En cours · ✅ Fait · ⚠️ Bloqué
 
-| 4 | Crontab + verify | Add crontab entry on CT 103: Monday & Thursday 10:00 Europe/Paris. Test end-to-end by removing one SKU from `state.txt` and running manually → confirm Telegram notification | Haiku | ~2k | ✅ Done |
+## Hors périmètre V2 (reportés)
 
-**Total estimate:** ~10k tokens (down from 33k). Simpler = cheaper, faster, less to maintain.
-
-**Runtime cost:** 0 tokens. Once deployed, the script runs autonomously on CT 103 — Claude is not involved.
-
-**Status legend:** ⏳ Todo · 🚧 In progress · ✅ Done · ⚠️ Blocked
+- i18n EN + IT avec sélecteur manuel
+- Stripe Payment Link pour pourboires 1–5 €
+- Mentions légales / politique de confidentialité
+- Double opt-in, CAPTCHA
+- Page stats / admin
+- Migration Resend → Brevo si volume > 100 mails/jour
