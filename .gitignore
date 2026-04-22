@@ -1,5 +1,18 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
 .env
 state.txt
+.env.local
+*.db
+data/
+.DS_Store
 
 # Claude Code local workspace
 .claude/

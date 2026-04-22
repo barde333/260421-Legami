@@ -7,8 +7,8 @@ La V1 (script Telegram) est archivée sous le tag git `v1-telegram`.
 
 | # | Étape | Description | Modèle | Tokens | Statut |
 |---|-------|-------------|--------|--------|--------|
-| 1 | Préparation comptes | Créer compte Brevo (gratuit, 300 mails/jour) + ajouter sender vérifié par email (pas de DNS requis) + générer API key. Réserver sous-domaine `pennino.bard3.duckdns.org` dans DuckDNS | Haiku | ~1k | ⏳ |
-| 2 | Squelette repo | Structure `app/`, `templates/`, `Dockerfile`, `docker-compose.yml`, `requirements.txt` (flask, httpx, apscheduler), `.gitignore`, `.env.example` | Haiku | ~2k | ⏳ |
+| 1 | Préparation comptes | Créer compte Brevo (gratuit, 300 mails/jour) + ajouter sender vérifié par email (pas de DNS requis) + générer API key. Réserver sous-domaine `pennino.bard3.duckdns.org` dans DuckDNS | Haiku | ~1k | Done |
+| 2 | Squelette repo | Structure `app/`, `templates/`, `Dockerfile`, `docker-compose.yml`, `requirements.txt` (flask, httpx, apscheduler), `.gitignore`, `.env.example` | Haiku | ~2k | Done |
 | 3 | DB + scraping | `sqlite3` stdlib : tables `subscribers` et `known_skus`, init idempotente. `scraper.py` : fetch + regex `VEP\d{4}`, diff, insertion. Premier run = seed silencieux | Sonnet | ~4k | ⏳ |
 | 4 | Mailer + scheduler | `mailer.py` : API Brevo (`POST /v3/smtp/email`, ~15 lignes), template HTML FR, lien désinscription avec token. APScheduler : job quotidien 10:00 Europe/Paris → scrape → envoi si nouveaux | Sonnet | ~4k | ⏳ |
 | 5 | Micro-site Flask (routes) | `GET /` page + formulaire inscription, `POST /` traitement, `GET /unsubscribe?token=...` suppression. Templates Jinja, rendu FR | Sonnet | ~3k | ⏳ |
