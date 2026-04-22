@@ -18,11 +18,11 @@ Le site est hébergé sur `pennino.bard3.duckdns.org`.
 | Identifiant produit | SKU depuis l'URL (ex. `VEP0074`), stable malgré les renommages |
 | Base de données | SQLite (inscrits + SKUs connus) |
 | Scheduler | APScheduler en process, cron interne 10h Europe/Paris |
-| Email | Brevo (API transactionnelle) |
+| Email | Resend (API transactionnelle) |
 | Hébergement | Docker sur Proxmox CT, reverse proxy Nginx Proxy Manager |
 | Langue | Français uniquement |
 
-Un seul service Python : page d'inscription + endpoint de désinscription (token unique par inscrit) + job quotidien de scraping qui envoie les mails en batch via Brevo.
+Un seul service Python : page d'inscription + endpoint de désinscription (token unique par inscrit) + job quotidien de scraping qui envoie les mails en batch via Resend.
 
 ## Fonctionnement utilisateur
 
@@ -35,7 +35,7 @@ Un seul service Python : page d'inscription + endpoint de désinscription (token
 
 - Déployé en container Docker sur Proxmox (skill Docker habituelle).
 - Sous-domaine `pennino.bard3.duckdns.org` via Nginx Proxy Manager.
-- Secrets (`BREVO_API_KEY`, clé de signature des tokens) dans `.env` monté dans le container, jamais committés.
+- Secrets (`RESEND_API_KEY`, clé de signature des tokens) dans `.env` monté dans le container, jamais committés.
 - État persisté dans un volume : base SQLite (inscrits + SKUs connus).
 
 ## Sécurité & RGPD
@@ -49,6 +49,8 @@ Un seul service Python : page d'inscription + endpoint de désinscription (token
 
 Reportés à une version ultérieure :
 - Internationalisation (EN/IT) avec sélecteur de langue
+- Section « Dernier stylo détecté » sur la home (nécessite enrichissement du scraper : nom, prix, image)
+- Dark mode
 - Pourboire Stripe
 - Page admin / statistiques
 - Double opt-in, CAPTCHA, mentions légales complètes
