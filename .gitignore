@@ -12,3 +12,9 @@ ENV/
 *.db
 data/
 .DS_Store
+
+# Claude Code local workspace
+.claude/
+
+# Local design drafts
+Pennino-draft.html
