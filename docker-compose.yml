@@ -1,12 +1,11 @@
-version: '3.8'
-
 services:
-  legami-watcher:
+  pennino:
     build: .
+    container_name: pennino
     ports:
-      - "8000:8000"
+      - "192.168.2.64:8000:8000"
     volumes:
-      - ./data:/app/data
+      - ./data:/data
     env_file:
       - .env
     restart: unless-stopped
