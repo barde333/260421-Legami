@@ -15,7 +15,7 @@ La V1 (script Telegram) est archivée sous le tag git `v1-telegram`.
 | 5b | Intégration design Pennino | Porter le HTML/CSS du prototype (`Pennino.html`) : rainbow stripe, nav+logo, pen-row animée, hero (eyebrow + H1 + sub + form email inline + hint), confirmation inline, footer. **Retirer** : switcher FR/EN/IT, tweaks panel, dark mode, section « Dernier stylo détecté », section « Comment ça marche » | Sonnet | ~4k | ✅ |
 | 6 | Packaging Docker | `Dockerfile` Python slim, `docker-compose.yml` avec volume `/data` et port 8000, conf via skill Docker du projet | Sonnet | ~3k | ✅ |
 | 7 | Déploiement Proxmox | Push code, config NPM (`pennino.bard3.duckdns.org` → :8000 + Let's Encrypt), volume monté, `.env` rempli, démarrage + vérif logs | Sonnet | ~3k | ✅ |
-| 8 | Bascule V1 → V2 | Vérifier scraping V2 cohérent avec V1, retirer cron Telegram sur CT 103, archiver `/opt/legami-watcher/` | Haiku | ~1k | ⏳ |
+| 8 | Bascule V1 → V2 | Vérifier scraping V2 cohérent avec V1, retirer cron Telegram sur CT 103, archiver `/opt/legami-watcher/` | Haiku | ~1k | ✅ |
 | 9 | Tests end-to-end | Inscription → forcer nouveau SKU → vérifier email reçu → clic désinscription → vérifier suppression. Contrôle anti-spam. Commit + merge `main` | Sonnet | ~2k | ⏳ |
 
 **Total estimé :** ~27k tokens (ajout étape 5b intégration design)
