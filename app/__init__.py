@@ -1,1 +1,3 @@
-# Legami Pen Watcher app package
+from app.db import init_db
+
+init_db()
