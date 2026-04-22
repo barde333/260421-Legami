@@ -3,14 +3,14 @@
 Étapes de conception & build de la V2 : micro-site public FR + notifications email quotidiennes.
 La V1 (script Telegram) est archivée sous le tag git `v1-telegram`.
 
-**Stack simplifiée** : Flask (3 routes) + Resend (API ultra simple) + SQLite stdlib + APScheduler. Un seul container Docker.
+**Stack simplifiée** : Flask (3 routes) + Brevo (API transactionnelle, sender vérifié par email — pas besoin de domaine) + SQLite stdlib + APScheduler. Un seul container Docker.
 
 | # | Étape | Description | Modèle | Tokens | Statut |
 |---|-------|-------------|--------|--------|--------|
-| 1 | Préparation comptes & domaine | Créer compte Resend + vérifier domaine d'envoi (SPF/DKIM), réserver sous-domaine `pennino.bard3.duckdns.org` dans DuckDNS | Haiku | ~1k | ⏳ |
+| 1 | Préparation comptes | Créer compte Brevo (gratuit, 300 mails/jour) + ajouter sender vérifié par email (pas de DNS requis) + générer API key. Réserver sous-domaine `pennino.bard3.duckdns.org` dans DuckDNS | Haiku | ~1k | ⏳ |
 | 2 | Squelette repo | Structure `app/`, `templates/`, `Dockerfile`, `docker-compose.yml`, `requirements.txt` (flask, httpx, apscheduler), `.gitignore`, `.env.example` | Haiku | ~2k | ⏳ |
 | 3 | DB + scraping | `sqlite3` stdlib : tables `subscribers` et `known_skus`, init idempotente. `scraper.py` : fetch + regex `VEP\d{4}`, diff, insertion. Premier run = seed silencieux | Sonnet | ~4k | ⏳ |
-| 4 | Mailer + scheduler | `mailer.py` : API Resend (~10 lignes), template HTML FR, lien désinscription avec token. APScheduler : job quotidien 10:00 Europe/Paris → scrape → envoi si nouveaux | Sonnet | ~4k | ⏳ |
+| 4 | Mailer + scheduler | `mailer.py` : API Brevo (`POST /v3/smtp/email`, ~15 lignes), template HTML FR, lien désinscription avec token. APScheduler : job quotidien 10:00 Europe/Paris → scrape → envoi si nouveaux | Sonnet | ~4k | ⏳ |
 | 5 | Micro-site Flask (routes) | `GET /` page + formulaire inscription, `POST /` traitement, `GET /unsubscribe?token=...` suppression. Templates Jinja, rendu FR | Sonnet | ~3k | ⏳ |
 | 5b | Intégration design Pennino | Porter le HTML/CSS du prototype (`Pennino.html`) : rainbow stripe, nav+logo, pen-row animée, hero (eyebrow + H1 + sub + form email inline + hint), confirmation inline, footer. **Retirer** : switcher FR/EN/IT, tweaks panel, dark mode, section « Dernier stylo détecté », section « Comment ça marche » | Sonnet | ~4k | ⏳ |
 | 6 | Packaging Docker | `Dockerfile` Python slim, `docker-compose.yml` avec volume `/data` et port 8000, conf via skill Docker du projet | Sonnet | ~3k | ⏳ |
@@ -34,4 +34,4 @@ La V1 (script Telegram) est archivée sous le tag git `v1-telegram`.
 - Mentions légales / politique de confidentialité
 - Double opt-in, CAPTCHA
 - Page stats / admin
-- Migration Resend → Brevo si volume > 100 mails/jour
+- Passage à un domaine d'envoi dédié (DKIM/SPF) si déliverabilité insuffisante
