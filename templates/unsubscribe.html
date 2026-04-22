@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pennino — Désinscription</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #fafafa; color: #222; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,.08); padding: 40px 32px; max-width: 480px; width: 100%; text-align: center; }
+    h1 { font-size: 1.4rem; margin-bottom: 16px; }
+    p { color: #555; line-height: 1.5; }
+    a { color: #e63946; }
+    .icon { font-size: 2.5rem; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if error %}
+      <div class="icon">⚠️</div>
+      <h1>Lien invalide</h1>
+      <p>Ce lien de désinscription est incorrect ou a déjà été utilisé.<br>
+         <a href="/">Retour à l'accueil</a></p>
+    {% else %}
+      <div class="icon">✅</div>
+      <h1>Désinscription confirmée</h1>
+      <p><strong>{{ email }}</strong> a bien été retiré(e) de la liste.<br>
+         Vous ne recevrez plus d'alertes.<br><br>
+         <a href="/">Se réinscrire</a></p>
+    {% endif %}
+  </div>
+</body>
+</html>

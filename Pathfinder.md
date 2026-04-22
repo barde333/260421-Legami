@@ -11,7 +11,7 @@ La V1 (script Telegram) est archivée sous le tag git `v1-telegram`.
 | 2 | Squelette repo | Structure `app/`, `templates/`, `Dockerfile`, `docker-compose.yml`, `requirements.txt` (flask, httpx, apscheduler), `.gitignore`, `.env.example` | Haiku | ~2k | Done |
 | 3 | DB + scraping | `sqlite3` stdlib : tables `subscribers` et `known_skus`, init idempotente. `scraper.py` : fetch + regex `VEP\d{4}`, diff, insertion. Premier run = seed silencieux | Sonnet | ~4k | ✅ |
 | 4 | Mailer + scheduler | `mailer.py` : API Brevo (`POST /v3/smtp/email`, ~15 lignes), template HTML FR, lien désinscription avec token. APScheduler : job quotidien 10:00 Europe/Paris → scrape → envoi si nouveaux | Sonnet | ~4k | ✅ |
-| 5 | Micro-site Flask (routes) | `GET /` page + formulaire inscription, `POST /` traitement, `GET /unsubscribe?token=...` suppression. Templates Jinja, rendu FR | Sonnet | ~3k | ⏳ |
+| 5 | Micro-site Flask (routes) | `GET /` page + formulaire inscription, `POST /` traitement, `GET /unsubscribe?token=...` suppression. Templates Jinja, rendu FR | Sonnet | ~3k | ✅ |
 | 5b | Intégration design Pennino | Porter le HTML/CSS du prototype (`Pennino.html`) : rainbow stripe, nav+logo, pen-row animée, hero (eyebrow + H1 + sub + form email inline + hint), confirmation inline, footer. **Retirer** : switcher FR/EN/IT, tweaks panel, dark mode, section « Dernier stylo détecté », section « Comment ça marche » | Sonnet | ~4k | ⏳ |
 | 6 | Packaging Docker | `Dockerfile` Python slim, `docker-compose.yml` avec volume `/data` et port 8000, conf via skill Docker du projet | Sonnet | ~3k | ⏳ |
 | 7 | Déploiement Proxmox | Push code, config NPM (`pennino.bard3.duckdns.org` → :8000 + Let's Encrypt), volume monté, `.env` rempli, démarrage + vérif logs | Sonnet | ~3k | ⏳ |
