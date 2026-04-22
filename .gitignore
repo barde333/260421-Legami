@@ -1,2 +1,8 @@
 .env
 state.txt
+
+# Claude Code local workspace
+.claude/
+
+# Local design drafts
+Pennino-draft.html
