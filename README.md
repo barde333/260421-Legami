@@ -13,7 +13,7 @@ Le site est hébergé sur `pennino.bard3.duckdns.org`.
 | Couche | Choix |
 |---|---|
 | Runtime | Python 3 (container Docker unique) |
-| Web | FastAPI + Jinja2 |
+| Web | Flask + Jinja2 |
 | Scraping | `re.findall(r'VEP\d{4}', html)` sur le HTML brut — page statique |
 | Identifiant produit | SKU depuis l'URL (ex. `VEP0074`), stable malgré les renommages |
 | Base de données | SQLite (inscrits + SKUs connus) |
